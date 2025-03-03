@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>抽奖软件</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+    }
+    /* 两个界面的公共样式 */
+    .section {
+      display: none;
+      padding: 20px;
+    }
+    .section.active {
+      display: block;
+    }
+    /* 第一个界面样式 */
+    #input-section h1 {
+      margin-top: 40px;
+    }
+    textarea {
+      width: 300px;
+      height: 200px;
+      font-size: 1em;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    /* 第二个界面样式 */
+    #name-display {
+      font-size: 3em;
+      margin: 50px 0;
+      height: 100px;
+      line-height: 100px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <!-- 第一界面：输入名字 -->
+  <div id="input-section" class="section active">
+    <h1>请输入名字（每行一个）</h1>
+    <textarea id="names-input" placeholder="例如：&#10;张三&#10;李四&#10;王五"></textarea><br>
+    <button id="start-btn">开始</button>
+  </div>
+
+  <!-- 第二界面：抽奖界面 -->
+  <div id="lottery-section" class="section">
+    <div id="name-display">等待抽奖...</div>
+    <button id="toggle-btn">停止</button>
+  </div>
+
+  <script>
+    // 全局变量
+    let names = [];
+    let currentTimer = null;
+    let isRunning = false;  // 当前是否在闪动
+    let drawnNames = [];    // 已抽中的名字
+
+    // 获取元素
+    const inputSection = document.getElementById('input-section');
+    const lotterySection = document.getElementById('lottery-section');
+    const startBtn = document.getElementById('start-btn');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const nameDisplay = document.getElementById('name-display');
+
+    // 第一个界面：点击“开始”
+    startBtn.addEventListener('click', () => {
+      const inputText = document.getElementById('names-input').value;
+      // 按行分割、去掉空格和空行
+      names = inputText.split('\n').map(name => name.trim()).filter(name => name !== "");
+      if (names.length === 0) {
+        alert("请输入至少一个名字！");
+        return;
+      }
+      // 切换界面
+      inputSection.classList.remove('active');
+      lotterySection.classList.add('active');
+      startFlashing();
+    });
+
+    // 开始闪动名字
+    function startFlashing() {
+      isRunning = true;
+      toggleBtn.textContent = "停止";
+      // 每100毫秒随机显示一个名字
+      currentTimer = setInterval(() => {
+        if (names.length === 0) {
+          clearInterval(currentTimer);
+          nameDisplay.textContent = "全部抽完！";
+          toggleBtn.disabled = true;
+          return;
+        }
+        let randomIndex = Math.floor(Math.random() * names.length);
+        nameDisplay.textContent = names[randomIndex];
+      }, 100);
+    }
+
+    // 停止闪动，随机确定中奖者
+    function stopFlashing() {
+      isRunning = false;
+      clearInterval(currentTimer);
+      // 随机抽取一个名字
+      let randomIndex = Math.floor(Math.random() * names.length);
+      let selectedName = names[randomIndex];
+      nameDisplay.textContent = selectedName;
+      // 将抽中的名字从候选名单中移除
+      names.splice(randomIndex, 1);
+      drawnNames.push(selectedName);
+      // 当还有剩余名字时按钮显示“继续”，否则显示“结束”
+      toggleBtn.textContent = names.length > 0 ? "继续" : "结束";
+    }
+
+    // 按钮点击事件：根据当前状态停止或继续闪动
+    toggleBtn.addEventListener('click', () => {
+      if (isRunning) {
+        stopFlashing();
+      } else {
+        if (names.length === 0) {
+          nameDisplay.textContent = "全部抽完！";
+          toggleBtn.disabled = true;
+        } else {
+          startFlashing();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
